@@ -1,9 +1,0 @@
-{
-    "views": [
-        "General",
-        "Display",
-        "Keybinds"
-    ],
-    "show_fps": false,
-    "show_timer": true
-}
