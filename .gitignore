@@ -1,4 +1,9 @@
 # Folders
 /data/
+/classes/__pycache__/
+/modules/__pycache__/
+/scenes/__pycache__/
+/scripts/__pycache__/
+/utils/__pycache__/
 
 # Files
