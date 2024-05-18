@@ -4,6 +4,7 @@ import pygame as pyg
 # Classes
 from classes.display import Colors, Fonts
 from classes.globals import Globals
+from classes.keybinds import Keybinds
 
 from scenes.scene_base import SceneBase
 from scripts.coin import Coin
@@ -171,12 +172,12 @@ class World(SceneBase):
 
         # Movement keys
         if not self.overlay_active:
-            if key == pyg.K_a:
+            if key in Keybinds.binds["move_left"]:
                 self.movement[1] = True
-            elif key == pyg.K_d:
+            elif key in Keybinds.binds["move_right"]:
                 self.movement[3] = True
 
-            elif key == pyg.K_SPACE:
+            elif key in Keybinds.binds["jump"]:
                 self.player.jump()
 
             elif key == pyg.K_LCTRL:
@@ -189,9 +190,9 @@ class World(SceneBase):
         """Runs whenever a keyboard button is released"""
         
         # Movement keys
-        if key == pyg.K_a:
+        if key in Keybinds.binds["move_left"]:
             self.movement[1] = False
-        elif key == pyg.K_d:
+        elif key in Keybinds.binds["move_right"]:
             self.movement[3] = False
 
         elif key == pyg.K_LCTRL:
