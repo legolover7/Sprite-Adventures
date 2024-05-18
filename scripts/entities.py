@@ -36,7 +36,9 @@ class PhysicsEntity:
 
         # Kill entity if it's too low
         if self.y > Globals.HEIGHT / 2 + 50 and not self.died:
-            self.respawn = 60
+            if self.type == "player":
+                self.respawn = 60
+                Globals.player_data["deaths"] += 1
 
         # Compute x collisions
         self.x += frame_movement[0]

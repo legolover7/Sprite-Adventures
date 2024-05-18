@@ -32,20 +32,23 @@ class World(SceneBase):
             "coin": Animation(load_images("objects/coin"), img_dur=10)
         }
 
-                        #Up     #Left  #Down  #Right
+        self.reset()
+
+        self.tilemap = TileMap(self)
+        self.settings_menu = settings_menu
+
+    def reset(self):
         self.movement = [False, False, False, False]
         self.player = Player(self, (50, 50), (16, 28))
         self.reset_position = [0, 0]
         self.current_world = 0
         self.current_level = 0
         self.transition = 0
-        self.max_levels = 0
+        self.max_levels = 5
         self.next_level = False
         self.settings_active = False
         self.enter_time = 0
-
-        self.tilemap = TileMap(self)
-        self.settings_menu = settings_menu
+        self.overlay_active = False
 
     def load_level(self, world_id = 0, level_id: int = 0):
         """Loads a level based on the provided world and level ID"""

@@ -39,7 +39,8 @@ class SettingsMenu(SceneBase):
                 "Keybinds",
             ],
             "show_fps": False,
-            "show_timer": False
+            "show_timer": True,
+            "show_deaths": False
         }
         
         if os.path.isfile(FilePaths.settings):

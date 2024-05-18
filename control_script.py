@@ -26,8 +26,20 @@ pyg.display.set_caption("Sprite Adventure")
 os.system("cls")
 
 # Read player data
-with open(FilePaths.player, "r") as file:
-    Globals.player_data = json.load(file)
+if os.path.isfile(FilePaths.player):
+    with open(FilePaths.player, "r") as file:
+        Globals.player_data = json.load(file)
+else:
+    Globals.player_data = {
+        "current_world": 0,
+        "current_level": 0,
+        "playticks": 0,
+        "deaths": 0,
+        "times": [0, 0, 0, 0, 0]
+    }
+    
+    with open(FilePaths.player, "w") as file:
+        file.write(json.dumps(Globals.player_data, indent=4))
 
 # Setting up scenes
 main_menu = MainMenu()
@@ -89,6 +101,7 @@ def control():
                     "deaths": 0,
                     "times": [0, 0, 0, 0, 0]
                 }
+                world.reset()
                 current_menu = world
                 world.load_level(world.current_world, world.current_level)
 
@@ -97,7 +110,6 @@ def control():
                 world.current_world = Globals.player_data["current_world"]
                 world.current_level = Globals.player_data["current_level"]
                 world.load_level(world.current_world, world.current_level)
-
 
             elif response == "Editor":
                 current_menu = editor
@@ -134,6 +146,11 @@ def control():
             Globals.VID_BUFFER.blit(Fonts.font_20.render("Level: " + str(world.current_world + 1) + "-" + str(world.current_level + 1), True, Colors.white), (2, 2))
             Globals.VID_BUFFER.blit(Fonts.font_20.render("Coins: " + str(Globals.coins_collected), True, Colors.white), (2, 22))
 
+            offset = 0
+            if settings_menu.data["show_deaths"]:
+                Globals.VID_BUFFER.blit(Fonts.font_20.render("Deaths: " + str(Globals.player_data["deaths"]), True, Colors.white), (2, 44))
+                offset = 22
+
             # Timer
             if settings_menu.data["show_timer"]:
                 seconds = Globals.player_data["playticks"] / 60
@@ -146,7 +163,7 @@ def control():
                 playtime += ("0" if minutes % 60 < 10 else "") + str(int(minutes) % 60) + ":"
                 playtime += ("0" if seconds % 60 < 10 else "") + str(round(seconds % 60, 2))
                 
-                Globals.VID_BUFFER.blit(Fonts.font_20.render("Timer: " + playtime, True, Colors.white), (2, 44))
+                Globals.VID_BUFFER.blit(Fonts.font_20.render("Timer: " + playtime, True, Colors.white), (2, 44 + offset))
             
         elif current_menu == editor:
             Globals.VID_BUFFER.blit(Fonts.font_20.render("Level: " + str(editor.current_world + 1) + "-" + str(editor.current_level + 1), True, Colors.white), (2, 2))

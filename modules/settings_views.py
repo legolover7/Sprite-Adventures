@@ -31,6 +31,7 @@ class GeneralV(View):
         self.checkboxes = {
             "show_fps": Checkbox((70, 100, 20, 20), "Show FPS", Fonts.font_24, left_align=True),
             "show_timer": Checkbox((70, 130, 20, 20), "Show Timer", Fonts.font_24, left_align=True),
+            "show_deaths": Checkbox((70, 160, 20, 20), "Show Deaths", Fonts.font_24, left_align=True),
         }
 
     def render(self, window: pyg.Surface):
