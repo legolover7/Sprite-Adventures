@@ -1,5 +1,4 @@
 # Folders
-/data/
 /classes/__pycache__/
 /modules/__pycache__/
 /scenes/__pycache__/
@@ -7,3 +6,5 @@
 /utils/__pycache__/
 
 # Files
+/data/player.json
+/data/settings.json
