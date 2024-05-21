@@ -3,8 +3,6 @@ import pygame as pyg
 import json
 
 # Classes
-from classes.display import Colors, Fonts
-from classes.globals import Globals
 from utils.animation import load_images
 
 NEIGHBOR_OFFSETS = []
@@ -13,12 +11,13 @@ for x in range(-2, 3):
     for y in range(-2, 3):
         NEIGHBOR_OFFSETS.append((x, y))
 
-PHYSICS_TILES = {"steel"}
+PHYSICS_TILES = {"steel", "door"}
 
 class TileMap:
     def __init__(self, world):
         self.world = world
 
+        self.links = {}
         self.tilemap = {}
         self.tile_size = 20
         self.offgrid_tiles = []
@@ -27,7 +26,9 @@ class TileMap:
             "steel": load_images("tiles/steel"),
             "flag": load_images("tiles/flag"),
             "lava": load_images("tiles/lava"),
-            "coin": load_images("objects/coin")
+            "coin": load_images("objects/coin"),
+            "door": load_images("objects/door"),
+            "button": load_images("objects/button"),
         }
 
     def extract(self, id_pairs, keep=False):
@@ -63,17 +64,21 @@ class TileMap:
     def save(self, path):
         """Saves the current tilemap to the desired path"""
         with open(path, "w") as file:
-            json.dump({'tilemap': self.tilemap, 'tile_size': self.tile_size, 
-                       'offgrid': self.offgrid_tiles}, file)
+            json.dump({"tilemap": self.tilemap, "tile_size": self.tile_size, 
+                       "offgrid": self.offgrid_tiles, "links": self.links}, file)
         
     def load(self, path):
         """Loads the current tilemap from the desired path"""
         with open(path, "r") as file:
             map_data = json.load(file)
         
-        self.tilemap = map_data['tilemap']
-        self.tile_size = map_data['tile_size']
-        self.offgrid_tiles = map_data['offgrid']
+        self.tilemap = map_data["tilemap"]
+        self.tile_size = map_data["tile_size"]
+        self.offgrid_tiles = map_data["offgrid"]
+        try:
+            self.links = map_data["links"]
+        except:
+            self.links = {}
         
     def solid_check(self, position):
         """Checks if the provided position has a tile placed there"""
@@ -98,6 +103,10 @@ class TileMap:
         """Renders the tiles to the screen"""
         for tile_location in self.tilemap:
             tile = self.tilemap[tile_location]
+            # Skip rendering certain tiles, because it's already taken care of
+            if tile["type"] == "door" and self.world.name == "world":
+                continue
+
             self.world._display.blit(self.assets[tile["type"]][tile["variant"]], 
                                      (tile["position"][0] * self.tile_size, 
                                       tile["position"][1] * self.tile_size))

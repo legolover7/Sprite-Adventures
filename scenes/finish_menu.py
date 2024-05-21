@@ -9,8 +9,9 @@ from classes.globals import Globals
 from scenes.scene_base import SceneBase
 
 class FinishMenu(SceneBase):
-    def __init__(self):
+    def __init__(self, settings_menu):
         super().__init__()
+        self.settings_menu = settings_menu
 
     def render(self):
         self._display.fill(Colors.charcoal)
@@ -24,6 +25,13 @@ class FinishMenu(SceneBase):
         text_width, text_height = Fonts.font_40.size("Coins collected: " + str(Globals.coins_collected))
         self._display.blit(Fonts.font_40.render("Coins collected: " + str(Globals.coins_collected), True, Colors.white), ((self._display.get_width() - text_width) / 2, (self._display.get_height() - text_height) / 2 - 60))
 
+        text_width, text_height = Fonts.font_30.size("Press the enter key to continue")
+        self._display.blit(Fonts.font_30.render("Press the enter key to continue", True, Colors.white), ((self._display.get_width() - text_width) / 2, (self._display.get_height() - text_height) / 2 + 100))
+
+        if not self.settings_menu.data["show_timer"]:
+            return
+
+        # Show times
         seconds = Globals.player_data["playticks"] / 60
         minutes = seconds // 60
         hours = minutes // 60
@@ -36,9 +44,6 @@ class FinishMenu(SceneBase):
                 
         text_width, text_height = Fonts.font_40.size("Time played: " + playtime)
         self._display.blit(Fonts.font_40.render("Time played: " + playtime, True, Colors.white), ((self._display.get_width() - text_width) / 2, (self._display.get_height() - text_height) / 2 - 20))
-
-        text_width, text_height = Fonts.font_30.size("Press any key to continue")
-        self._display.blit(Fonts.font_30.render("Press any key to continue", True, Colors.white), ((self._display.get_width() - text_width) / 2, (self._display.get_height() - text_height) / 2 + 100))
 
         offset = self._display.get_height()/2 + 150
         for t in range(5):
@@ -59,4 +64,5 @@ class FinishMenu(SceneBase):
         if key == pyg.K_F1:
             self.finished = True
 
-        return "Main Menu"
+        elif key == pyg.K_RETURN:
+            return "Main Menu"

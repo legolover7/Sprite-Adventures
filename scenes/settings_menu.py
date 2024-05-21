@@ -24,7 +24,7 @@ class SettingsMenu(SceneBase):
         self.active_view = "general"
         self.views = {
             "general": GeneralV(),
-            "display": View(),
+            "display": DisplayV(),
             "keybinds": View(),
         }
 

@@ -1,6 +1,6 @@
 import pygame as pyg
 
-from classes.buttons import Checkbox
+from classes.buttons import Checkbox, Dropdown
 from classes.display import Colors, Fonts
 from classes.globals import Globals
 
@@ -47,3 +47,25 @@ class GeneralV(View):
             if self.checkboxes[box].check_mcollision(mouse_position):
                 self.checkboxes[box].active = not self.checkboxes[box].active
                 return True
+            
+class DisplayV(View):
+    def __init__(self):
+        super().__init__()
+
+        # self.dropdowns = {
+        #     "resolution": Dropdown((70, 100, 200, 30), Fonts.font_20, ["1920x1080", "1065x600"])
+        # }
+
+    def render(self, window: pyg.Surface):
+        self.draw_background()
+
+        # for dd in self.dropdowns:
+        #     self.dropdowns[dd].draw(self._display, Globals.mouse_position)
+
+        window.blit(self._display, (self.x, self.y))
+        
+    # def click(self, mouse_position: list):
+    #     previous_resolution = self.dropdowns["resolution"].selected_option
+    #     self.dropdowns["resolution"].click(mouse_position)
+    #     if self.dropdowns["resolution"].selected_option != previous_resolution:
+    #         return self.dropdowns["resolution"].selected_option

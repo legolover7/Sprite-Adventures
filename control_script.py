@@ -7,6 +7,7 @@ import os
 # Custom modules
 from classes.display import Colors, Fonts
 from classes.globals import Globals, FilePaths
+from classes.window import WindowManager
 
 from scenes.finish_menu import FinishMenu
 from scenes.main_menu import MainMenu
@@ -16,14 +17,7 @@ from scenes.world import World
 
 from utils.profiler import Profiler
 
-# Initialize window
-pyg.init()
-info_object = pyg.display.Info()
-Globals.WIDTH, Globals.HEIGHT = (1920, 1080)
-Globals.WINDOW_WIDTH, Globals.WINDOW_HEIGHT = info_object.current_w, info_object.current_h
-Globals.WINDOW = pyg.display.set_mode((Globals.WINDOW_WIDTH, Globals.WINDOW_HEIGHT))
-pyg.display.set_caption("Sprite Adventure")
-os.system("cls")
+window_manager = WindowManager()
 
 # Read player data
 if os.path.isfile(FilePaths.player):
@@ -42,9 +36,9 @@ else:
         file.write(json.dumps(Globals.player_data, indent=4))
 
 # Setting up scenes
-main_menu = MainMenu()
-finish_menu = FinishMenu()
 settings_menu = SettingsMenu()
+main_menu = MainMenu()
+finish_menu = FinishMenu(settings_menu)
 editor = Editor()
 world = World(settings_menu)
 
@@ -58,6 +52,7 @@ profiler = Profiler(Globals.FPS, (Globals.WIDTH - 25, 5), Fonts.font_20, Colors.
 # Game loop
 def control():
     global editor, main_menu, settings_menu, world, finish_menu
+    global window_manager
     current_menu = main_menu
 
     while True:
@@ -72,7 +67,10 @@ def control():
                 quit()
 
             elif event.type == pyg.KEYDOWN:
-                response = current_menu.keydown_event(event.key)
+                if event.key == pyg.K_F11:
+                    window_manager.fullscreen()
+                else:
+                    response = current_menu.keydown_event(event.key)
 
             elif event.type == pyg.KEYUP:
                 response = current_menu.keyup_event(event.key)
@@ -168,6 +166,9 @@ def control():
         elif current_menu == editor:
             Globals.VID_BUFFER.blit(Fonts.font_20.render("Level: " + str(editor.current_world + 1) + "-" + str(editor.current_level + 1), True, Colors.white), (2, 2))
 
+            if editor.show_ui:
+                Globals.VID_BUFFER.blit(editor.ui_display, (0, 0))
+
         # Transition for settings menu
         if settings_menu.transition:
             if settings_menu.transition > 0:
@@ -187,7 +188,7 @@ def control():
         
         Globals.WINDOW.blit(pyg.transform.scale(Globals.VID_BUFFER, (Globals.WINDOW_WIDTH, Globals.WINDOW_HEIGHT)), (0, 0))
 
-        pyg.display.update()
+        window_manager.update()
 
         Globals.clock.tick(Globals.FPS)
         if current_menu == world and not world.transition:

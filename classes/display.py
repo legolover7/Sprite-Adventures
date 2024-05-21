@@ -11,6 +11,10 @@ class Colors:
     white = (255, 255, 255)
 
     green = (0, 200, 0)
+    dark_green = (0, 150, 0)
+    yellow = (255, 255, 0)
+    dark_yellow = (200, 200, 0)
+    
     aqua = (0, 255, 255)
     blue = (0, 0, 200)
     light_blue = (0, 0, 238)

@@ -3,7 +3,7 @@ import pygame as pyg
 from classes.globals import Globals
 from scripts.tilemap import TileMap
 
-from utils.animation import Animation
+from utils.animation import play_sound
 
 class PhysicsEntity:
     def __init__(self, world, position, size, type):
@@ -52,7 +52,7 @@ class PhysicsEntity:
                     entity_rect.left = rect.right
                     self.collisions['left'] = True
                 self.x = entity_rect.x
-        
+
         # Compute y collisions
         self.y += frame_movement[1]
         entity_rect = self.rect()
