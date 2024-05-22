@@ -20,7 +20,7 @@ class Globals:
     player_data = {}
     coins_collected = 0
 
-    VERSION = "0.4.0"
+    VERSION = "0.4.1"
 
 class FilePaths:
     settings = "./data/settings.json"

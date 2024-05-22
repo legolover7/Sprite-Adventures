@@ -44,6 +44,7 @@ class World(SceneBase):
             "player_jump": load_sound("sounds/jump.wav"),
             "button_press": load_sound("sounds/pressButton.wav"),
             "lava_death": load_sound("sounds/lavaDeath.wav"),
+            "level_complete": load_sound("sounds/levelComplete.wav"),
         }
 
         self.reset()
@@ -208,6 +209,7 @@ class World(SceneBase):
             player_rect = self.player.rect()
             flag_rect = pyg.Rect(flag["position"][0], flag["position"][1], 20, 30)
             if player_rect.colliderect(flag_rect) and not self.next_level:
+                play_sound(self.sounds["level_complete"])
                 self.current_level += 1
                 self.current_level %= self.max_levels
                 if self.current_level == 0:

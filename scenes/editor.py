@@ -9,6 +9,7 @@ from classes.keybinds import Keybinds
 
 from scenes.scene_base import SceneBase
 from scripts.tilemap import TileMap
+from scripts.undo_redo import UndoRedo
 
 import modules.collider as collider
 import utils.utils as utils
@@ -25,6 +26,7 @@ class Editor(SceneBase):
         self.current_level = 0
         self.current_world = 0
         self.nodes = {}
+        self.saved_tiles = {}
 
         self.current_link = []
 
@@ -36,6 +38,10 @@ class Editor(SceneBase):
             "ctrl": False,
         }
 
+        self.current_action = None
+        self.undo_list = []
+        self.redo_list = []
+
         self.ui_display = pyg.Surface((200, Globals.WIDTH))
         self.ui_display.set_alpha(200)
         self.show_ui = True
@@ -44,6 +50,7 @@ class Editor(SceneBase):
         self.tilemap = TileMap(self)
         self.objects = list(self.tilemap.assets.keys())
         self.tilemap.load("./data/world0/levels/0.json")
+        self.saved_tiles = self.tilemap.tilemap.copy()
 
     def draw_ui(self):
         self.ui_display.fill(Colors.charcoal)
@@ -82,6 +89,7 @@ class Editor(SceneBase):
         if self.mode == "Place":
             self._display.blit(preview_image, (tile_x * self.tilemap.tile_size - image_offset[0], 
                                             tile_y * self.tilemap.tile_size - image_offset[1]))
+            
 
             # Place/delete objects
             if self.modifiers["click"]:
@@ -96,10 +104,16 @@ class Editor(SceneBase):
                 self.tilemap.tilemap[tile_location] = {
                     "type": asset, "variant": self.variant, 
                     "position": [tile_x - image_offset[0] / self.tilemap.tile_size, tile_y - image_offset[1] / self.tilemap.tile_size]}
+                
+                self.current_action.tiles[tile_location] = {
+                    "type": asset, "variant": self.variant, 
+                    "position": [tile_x - image_offset[0] / self.tilemap.tile_size, tile_y - image_offset[1] / self.tilemap.tile_size]}
 
-
+            # Remove tiles
             if self.modifiers["right_click"] and tile_location in self.tilemap.tilemap:
                 tile = self.tilemap.tilemap[tile_location]
+                self.current_action.tiles[tile_location] = tile.copy()
+                
                 # Remove doors from any linkages
                 if tile["type"] == "door":
                     for link in self.tilemap.links:
@@ -140,36 +154,70 @@ class Editor(SceneBase):
                 sx, sy = utils.cvt_str_to_tile(start_node)
                 for end_node in self.tilemap.links[start_node]:
                     fx, fy = utils.cvt_str_to_tile(end_node)
-                    pyg.draw.line(self._display, Colors.aqua, (sx + 10, sy + 10), (fx + 10, fy + 10))
+
+                    size = 2 if utils.check_pt_on_line((sx + 10, sy + 10), (fx + 10, fy + 10), (Globals.mouse_position[0] / 2, Globals.mouse_position[1] / 2), 0.05) else 1
+                    pyg.draw.line(self._display, Colors.aqua, (sx + 10, sy + 10), (fx + 10, fy + 10), size)
 
         self.draw_ui()
 
+    def check_mode_select(self):
+        text_width, text_height = Fonts.font_20.size("Placement mode")
+        if collider.collides_point(Globals.mouse_position, (0, 38, text_width + 4, text_height + 4)):
+            self.mode = "Place"
+            self.nodes = {}
+            return True
+
+        text_width, text_height = Fonts.font_20.size("Linking mode")
+        if collider.collides_point(Globals.mouse_position, (0, 68, text_width + 4, text_height + 4)):
+            self.mode = "Link"
+            return True
+
     def keydown_event(self, key):
         """Runs whenever a keyboard button is pressed"""
-        if key == pyg.K_F1:
-            self.finished = True
-            return
-        elif key in Keybinds.binds["save"]:
+        if key in Keybinds.binds["save"]:
+            # Save level
             self.tilemap.save(f"./data/world{self.current_world}/levels/{self.current_level}.json")
+            self.saved_tiles = self.tilemap.tilemap.copy()
             return
         elif key == pyg.K_F3:
+            # World view
             self.tilemap.save(f"./data/world{self.current_world}/levels/{self.current_level}.json")
             return self.current_level
+        elif key == pyg.K_F4:
+            # Clear level
+            self.tilemap.tilemap = {}
+            self.tilemap.links = {}
+        elif key == pyg.K_F5:
+            # Reload level
+            if self.saved_tiles != {}:
+                self.tilemap.tilemap = self.saved_tiles.copy()
 
+        # Keyboard modifiers
         elif key == pyg.K_LSHIFT:
             self.modifiers["shift"] = True
             return
         elif key == pyg.K_LCTRL:
             self.modifiers["ctrl"] = True
 
+        # Level navigation
         elif key == pyg.K_RIGHT:
             self.current_level += 1
+            try:
+                self.tilemap.load(f"./data/world{self.current_world}/levels/{self.current_level}.json")
+            except FileNotFoundError:
+                self.tilemap.tilemap = {}
         elif key == pyg.K_LEFT:
             self.current_level -= 1
+            try:
+                self.tilemap.load(f"./data/world{self.current_world}/levels/{self.current_level}.json")
+            except FileNotFoundError:
+                self.tilemap.tilemap = {}
 
+        # Show/hide UI
         elif key == pyg.K_LEFTBRACKET:
             self.show_ui = not self.show_ui
 
+        # Creating new level
         elif key == pyg.K_RETURN:
             if self.modifiers["ctrl"]:
                 self.current_world = self.max_worlds
@@ -179,15 +227,30 @@ class Editor(SceneBase):
                 self.current_level = self.max_levels
                 self.max_levels += 1
 
+        # Undo/redo
+        elif key == pyg.K_z and self.modifiers["ctrl"]:
+            action = None
+            if not self.modifiers["shift"]:
+                if len(self.undo_list) > 0:
+                    action: UndoRedo = self.undo_list.pop()
+                    self.redo_list.append(action)
+            else:
+                if len(self.redo_list) > 0:
+                    action: UndoRedo = self.redo_list.pop()
+                    self.undo_list.append(action)
+            if action is not None:
+                action.activate()
+                action.action = ("remove" if action.action == "replace" else "replace")
+
+        elif key == pyg.K_y and self.modifiers["ctrl"]:
+            if len(self.redo_list) > 0:
+                action: UndoRedo = self.redo_list.pop()
+                self.undo_list.append(action)
+                action.activate()
+                action.action = ("remove" if action.action == "replace" else "replace")
+
+
         self.current_level %= self.max_levels
-        try:
-            self.tilemap.load(f"./data/world{self.current_world}/levels/{self.current_level}.json")
-        except FileNotFoundError:
-            self.tilemap.tilemap = {}
-        
-        # Clear level
-        if key == pyg.K_F4:
-            self.tilemap.tilemap = {}
 
     def keyup_event(self, key):
         """Runs whenever a keyboard button is released"""
@@ -200,21 +263,20 @@ class Editor(SceneBase):
         """Runs whenever a mouse button is pressed"""
         if button == 1:
             # Check for if a different mode was pressed
-            text_width, text_height = Fonts.font_20.size("Placement mode")
-            if collider.collides_point(Globals.mouse_position, (0, 38, text_width + 4, text_height + 4)):
-                self.mode = "Place"
-                self.nodes = {}
-                return
-
-            text_width, text_height = Fonts.font_20.size("Linking mode")
-            if collider.collides_point(Globals.mouse_position, (0, 68, text_width + 4, text_height + 4)):
-                self.mode = "Link"
+            if self.check_mode_select():
                 return
             
             self.modifiers["click"] = True
+
+            if self.current_action == None:
+                self.current_action = UndoRedo(self.tilemap)
+                self.current_action.action = "remove"
             
         elif button == 3:
             self.modifiers["right_click"] = True
+            
+            if self.current_action == None:
+                self.current_action = UndoRedo(self.tilemap)
 
         elif button == 4:
             if self.modifiers["ctrl"]:
@@ -248,6 +310,11 @@ class Editor(SceneBase):
         """Runs whenever a mouse button is released"""
         if button == 1:
             self.modifiers["click"] = False
+            if self.current_action is not None:
+                if len(self.current_action.tiles) > 0:
+                    self.undo_list.append(self.current_action)
+                    self.current_action = None
+                    self.redo_list = []
 
             if self.mode == "Link":
                 # Connect nodes
@@ -272,10 +339,27 @@ class Editor(SceneBase):
 
         elif button == 3:
             self.modifiers["right_click"] = False
+            if self.current_action is not None:
+                if len(self.current_action.tiles) > 0:
+                    self.undo_list.append(self.current_action)
+                    self.current_action = None
+                    self.redo_list = []
 
             if self.mode == "Link":
-                for node in self.tilemap.links.copy():
-                    x, y = utils.cvt_str_to_tile(node)
+                for start_node in self.tilemap.links.copy():
+                    x, y = utils.cvt_str_to_tile(start_node)
 
                     if collider.collides_point_circle((Globals.mouse_position[0] / 2, Globals.mouse_position[1] / 2), (x + 10, y + 10), 3):
-                        del self.tilemap.links[node]
+                        del self.tilemap.links[start_node]
+                        continue
+
+                    # Delete lines that are right clicked
+                    for end_node in self.tilemap.links[start_node].copy():
+                        sx, sy = utils.cvt_str_to_tile(start_node)
+                        ex, ey = utils.cvt_str_to_tile(end_node)
+                        
+                        if utils.check_pt_on_line((sx + 10, sy + 10), (ex + 10, ey + 10), (Globals.mouse_position[0] / 2, Globals.mouse_position[1] / 2), 0.05):
+                            self.tilemap.links[start_node].remove(end_node)
+                            if len(self.tilemap.links[start_node]) == 0:
+                                del self.tilemap.links[start_node]
+                    

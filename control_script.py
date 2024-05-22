@@ -67,7 +67,9 @@ def control():
                 quit()
 
             elif event.type == pyg.KEYDOWN:
-                if event.key == pyg.K_F11:
+                if event.key == pyg.K_F1:
+                    quit()
+                elif event.key == pyg.K_F11:
                     window_manager.fullscreen()
                 else:
                     response = current_menu.keydown_event(event.key)
@@ -124,7 +126,7 @@ def control():
                 current_menu = world
                 world.current_level = editor.current_level
                 world.current_world = editor.current_world
-                world.load_level(0, response)
+                world.load_level(world.current_world, world.current_level)
                 
             elif isinstance(response, int) and current_menu == world:
                 current_menu = editor
