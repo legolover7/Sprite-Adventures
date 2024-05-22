@@ -10,14 +10,12 @@ class SceneBase:
         settings_active: Whether or not the settings overlay is shown
     """
     def __init__(self, render_scale=1):
-        self.finished = False
         self.overlay_active = False
         self.settings_active = False
         self._display = pyg.Surface((Globals.WIDTH // render_scale, Globals.HEIGHT // render_scale))
         
     def update(self):
         pass
-
 
     def keydown_event(self, key):
         """Runs whenever a keyboard button is pressed"""

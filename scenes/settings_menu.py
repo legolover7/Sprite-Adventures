@@ -6,7 +6,7 @@ import os
 # Classes
 from classes.buttons import Button, Checkbox
 from classes.display import Colors, Fonts
-from classes.globals import FilePaths
+from classes.globals import Sounds, FilePaths
 
 from modules.settings_views import *
 from scenes.scene_base import SceneBase
@@ -26,6 +26,7 @@ class SettingsMenu(SceneBase):
             "general": GeneralV(),
             "display": DisplayV(),
             "keybinds": View(),
+            "sound": SoundV()
         }
 
         self.load()
@@ -37,10 +38,13 @@ class SettingsMenu(SceneBase):
                 "General",
                 "Display",
                 "Keybinds",
+                "Sound"
             ],
             "show_fps": False,
             "show_timer": True,
-            "show_deaths": False
+            "show_deaths": False,
+            "mute_sound": False,
+            "sound_effects": 0.5
         }
         
         if os.path.isfile(FilePaths.settings):
@@ -55,6 +59,10 @@ class SettingsMenu(SceneBase):
             for b in view.checkboxes:
                 box = view.checkboxes[b]
                 box.active = self.data[b]
+
+            for s in view.sliders:
+                slider = view.sliders[s]
+                slider.progress = self.data[s]
 
     def save(self):
         """Saves the data to the settings file"""
@@ -93,9 +101,8 @@ class SettingsMenu(SceneBase):
         self._display.blit(Fonts.font_30.render(title, True, Colors.white), (230, 20))
 
     def keydown_event(self, key):
-        """Runs whenever a keyboard button is pressed"""
-        if key == pyg.K_F1:
-            self.finished = True
+        if key == pyg.K_ESCAPE:
+            return "Main Menu"
 
     def mousedown_event(self, button):
         """Runs whenever a mouse button is pressed"""
@@ -123,3 +130,17 @@ class SettingsMenu(SceneBase):
                 for b in view.checkboxes:
                     box = view.checkboxes[b]
                     self.data[b] = box.active
+
+                for s in view.sliders:
+                    slider = view.sliders[s]
+                    self.data[s] = slider.progress
+
+    def mouseup_event(self, button):
+        if button == 1:
+            if self.active_view == "sound":
+                self.views["sound"].sliders["sound_effects"].clicked = False
+                
+                volume = self.views["sound"].sliders["sound_effects"].progress
+                self.data["sound_effects"] = volume
+                for sound in Sounds.sfx:
+                    Sounds.sfx[sound].set_volume(volume)

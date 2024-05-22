@@ -6,7 +6,7 @@ import os
 
 # Custom modules
 from classes.display import Colors, Fonts
-from classes.globals import Globals, FilePaths
+from classes.globals import Globals, Sounds, FilePaths
 from classes.window import WindowManager
 
 from scenes.finish_menu import FinishMenu
@@ -42,6 +42,10 @@ finish_menu = FinishMenu(settings_menu)
 editor = Editor()
 world = World(settings_menu)
 
+volume = settings_menu.views["sound"].sliders["sound_effects"].progress
+for sound in Sounds.sfx:
+    Sounds.sfx[sound].set_volume(volume)
+
 # Get number of levels available
 _, _, files = next(os.walk("./data/world0/levels"))
 world.max_levels = len(files)
@@ -50,7 +54,7 @@ editor.max_levels = len(files)
 profiler = Profiler(Globals.FPS, (Globals.WIDTH - 25, 5), Fonts.font_20, Colors.white, display=True)
 
 # Game loop
-def control():
+def main():
     global editor, main_menu, settings_menu, world, finish_menu
     global window_manager
     current_menu = main_menu
@@ -82,9 +86,6 @@ def control():
 
             elif event.type == pyg.MOUSEBUTTONUP:
                 current_menu.mouseup_event(event.button)
-
-        if current_menu.finished:
-            quit()
 
         if current_menu.settings_active:
             current_menu.settings_active = False
@@ -193,7 +194,7 @@ def control():
         window_manager.update()
 
         Globals.clock.tick(Globals.FPS)
-        if current_menu == world and not world.transition:
+        if current_menu == world and not world.transition and not settings_menu.active:
             Globals.player_data["playticks"] += 1
 
 def quit():
@@ -208,4 +209,4 @@ def quit():
     sys.exit()
 
 if __name__ == "__main__":
-    control()
+    main()

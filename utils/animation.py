@@ -1,11 +1,10 @@
+import pygame as pyg
 import os
-
-import pygame
 
 BASE_IMG_PATH = 'assets/'
 
 def load_image(path):
-    img = pygame.image.load(BASE_IMG_PATH + path).convert()
+    img = pyg.image.load(BASE_IMG_PATH + path).convert()
     img.set_colorkey((1, 1, 1))
     return img
 
@@ -16,10 +15,10 @@ def load_images(path):
     return images
 
 def load_sound(path):
-    return pygame.mixer.Sound(BASE_IMG_PATH + path)
+    return pyg.mixer.Sound(BASE_IMG_PATH + path)
 
 def play_sound(sound):
-    pygame.mixer.Sound.play(sound)
+    pyg.mixer.Sound.play(sound)
 
 class Animation:
     def __init__(self, images, img_dur=5, loop=True):

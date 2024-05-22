@@ -3,8 +3,6 @@ import pygame as pyg
 from classes.globals import Globals
 from scripts.tilemap import TileMap
 
-from utils.animation import play_sound
-
 class PhysicsEntity:
     def __init__(self, world, position, size, type):
         self.world = world

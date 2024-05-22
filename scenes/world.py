@@ -3,7 +3,7 @@ import pygame as pyg
 
 # Classes
 from classes.display import Colors, Fonts
-from classes.globals import Globals
+from classes.globals import Globals, Sounds
 from classes.keybinds import Keybinds
 
 from scenes.scene_base import SceneBase
@@ -37,14 +37,6 @@ class World(SceneBase):
             "coin": Animation(load_images("objects/coin"), img_dur=10),
             "button": load_images("objects/button"),
             "door": load_image("objects/door/0.png"),
-        }
-
-        self.sounds = {
-            "coin_pickup": load_sound("sounds/pickupCoin.wav"),
-            "player_jump": load_sound("sounds/jump.wav"),
-            "button_press": load_sound("sounds/pressButton.wav"),
-            "lava_death": load_sound("sounds/lavaDeath.wav"),
-            "level_complete": load_sound("sounds/levelComplete.wav"),
         }
 
         self.reset()
@@ -83,8 +75,8 @@ class World(SceneBase):
             self.tilemap.load(f"./data/world{world_id}/levels/{level_id}.json")
             pyg.display.set_caption(f"Sprite Adventure {world_id + 1}-{level_id + 1}")
 
-            Globals.player_data["current_world"] = world_id
-            Globals.player_data["current_level"] = level_id
+            self.settings_menu.data["current_world"] = world_id
+            self.settings_menu.data["current_level"] = level_id
 
             # Extract objects from tilemap
             for flag in self.tilemap.extract([("flag", 0)]):
@@ -140,8 +132,8 @@ class World(SceneBase):
 
         # Transition for levels/player death
         if self.transition > 0 or self.player.respawn:
-            transition_surf = pygame.Surface(self._display.get_size())
-            pygame.draw.circle(transition_surf, (255, 255, 255), (self._display.get_width() // 2, self._display.get_height() // 2), (30 - abs(self.transition)) * 20)
+            transition_surf = pyg.Surface(self._display.get_size())
+            pyg.draw.circle(transition_surf, (255, 255, 255), (self._display.get_width() // 2, self._display.get_height() // 2), (30 - abs(self.transition)) * 20)
             transition_surf.set_colorkey((255, 255, 255))
             self._display.blit(transition_surf, (0, 0))
             self.transition = max(0, self.transition - 1)
@@ -176,8 +168,8 @@ class World(SceneBase):
             if player_rect.colliderect(coin.rect()):
                 self.coin_pickups.remove(coin)
                 Globals.coins_collected += 1
-                self.sounds["coin_pickup"]
-                play_sound(self.sounds["coin_pickup"])
+                if not self.settings_menu.data["mute_sound"]:
+                    play_sound(Sounds.sfx["coin_pickup"])
 
         # Update buttons
         for button in self.buttons:
@@ -185,7 +177,8 @@ class World(SceneBase):
             button_rect = button.rect()
             # Player stepped on button
             if player_rect.colliderect(button_rect) and button.pressed == 0:
-                play_sound(self.sounds["button_press"])
+                if not self.settings_menu.data["mute_sound"]:
+                    play_sound(Sounds.sfx["button_press"])
                 for connection in self.connections:
                     connection.press(button)
                 button.pressed = True
@@ -209,7 +202,8 @@ class World(SceneBase):
             player_rect = self.player.rect()
             flag_rect = pyg.Rect(flag["position"][0], flag["position"][1], 20, 30)
             if player_rect.colliderect(flag_rect) and not self.next_level:
-                play_sound(self.sounds["level_complete"])
+                if not self.settings_menu.data["mute_sound"]:
+                    play_sound(Sounds.sfx["level_complete"])
                 self.current_level += 1
                 self.current_level %= self.max_levels
                 if self.current_level == 0:
@@ -232,15 +226,13 @@ class World(SceneBase):
                 self.player.died = True
                 Globals.player_data["deaths"] += 1
                 self.player.set_action("dissolve")
-                play_sound(self.sounds["lava_death"])
+                if not self.settings_menu.data["mute_sound"]:
+                    play_sound(Sounds.sfx["lava_death"])
 
 
     def keydown_event(self, key):
         """Runs whenever a keyboard button is pressed"""
-        if key == pyg.K_F1:
-            self.finished = True
-
-        elif key == pyg.K_F2:
+        if key == pyg.K_F2:
             return "Main Menu"
 
         elif key == pyg.K_F3:
@@ -254,8 +246,8 @@ class World(SceneBase):
                 self.movement[3] = True
 
             elif key in Keybinds.binds["jump"]:
-                if self.player.jump():
-                    play_sound(self.sounds["player_jump"])
+                if self.player.jump() and not self.settings_menu.data["mute_sound"]:
+                    play_sound(Sounds.sfx["player_jump"])
 
 
             elif key == pyg.K_LCTRL:
@@ -279,3 +271,7 @@ class World(SceneBase):
     def mousedown_event(self, button):
         if self.settings_menu.active:
             return self.settings_menu.mousedown_event(button)
+        
+    def mouseup_event(self, button):
+        if self.settings_menu.active:
+            return self.settings_menu.mouseup_event(button)

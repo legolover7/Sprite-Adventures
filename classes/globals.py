@@ -1,6 +1,8 @@
 import pygame as pyg
 pyg.init()
 
+from utils.animation import load_sound
+
 class Globals:
     # Default size of the application
     WIDTH, HEIGHT = (1920, 1080)
@@ -20,7 +22,16 @@ class Globals:
     player_data = {}
     coins_collected = 0
 
-    VERSION = "0.4.1"
+    VERSION = "0.4.2"
+
+class Sounds:
+    sfx = {
+        "coin_pickup": load_sound("sounds/pickupCoin.wav"),
+        "player_jump": load_sound("sounds/jump.wav"),
+        "button_press": load_sound("sounds/pressButton.wav"),
+        "lava_death": load_sound("sounds/lavaDeath.wav"),
+        "level_complete": load_sound("sounds/levelComplete.wav"),
+    }
 
 class FilePaths:
     settings = "./data/settings.json"

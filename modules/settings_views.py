@@ -3,6 +3,7 @@ import pygame as pyg
 from classes.buttons import Checkbox, Dropdown
 from classes.display import Colors, Fonts
 from classes.globals import Globals
+from classes.slider import Slider
 
 class View:
     def __init__(self):
@@ -11,6 +12,7 @@ class View:
 
         self._display = pyg.Surface((self.width, self.height))
         self.checkboxes = {}
+        self.sliders = {}
 
 
     def draw_background(self):
@@ -69,3 +71,30 @@ class DisplayV(View):
     #     self.dropdowns["resolution"].click(mouse_position)
     #     if self.dropdowns["resolution"].selected_option != previous_resolution:
     #         return self.dropdowns["resolution"].selected_option
+
+class SoundV(View):
+    def __init__(self):
+        super().__init__()
+        self.sliders = {
+            "sound_effects": Slider((70, 100), (200, 30), "Sound Effects")
+        }
+
+        self.checkboxes = {
+            "mute_sound": Checkbox((70, 150, 20, 20), "Mute Sound", Fonts.font_24, left_align=True)
+        }
+
+    def render(self, window: pyg.Surface):
+        self.draw_background()
+
+        self.sliders["sound_effects"].render(self._display, [Globals.mouse_position[0] - 200, Globals.mouse_position[1]])
+        self.checkboxes["mute_sound"].draw(self._display)
+
+        window.blit(self._display, (self.x, self.y))
+
+    def click(self, mouse_position: list):
+        self.sliders["sound_effects"].check_mdown(mouse_position)
+
+        for box in self.checkboxes:
+            if self.checkboxes[box].check_mcollision(mouse_position):
+                self.checkboxes[box].active = not self.checkboxes[box].active
+                return True

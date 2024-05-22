@@ -61,8 +61,5 @@ class FinishMenu(SceneBase):
 
     def keydown_event(self, key):
         """Runs whenever a keyboard button is pressed"""
-        if key == pyg.K_F1:
-            self.finished = True
-
-        elif key == pyg.K_RETURN:
+        if key == pyg.K_RETURN:
             return "Main Menu"
