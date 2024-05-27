@@ -1,4 +1,4 @@
-# Sprite Adventures
+# Sprite Platformer
 A 2D Platformer involving a lil guy named Sprite
 
 # Installation
